@@ -1,5 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from datetime import date
+from .models import Post
 
 all_posts = [
     {
@@ -68,12 +69,8 @@ all_posts = [
 ]
 
 
-def get_date(post):
-    return post['date']
-
-
 def index(request):
-    featured_posts = sorted(all_posts, key=get_date)[-3:]
+    featured_posts = Post.objects.all().order_by('-date')[:3]
     context = {
         'posts': featured_posts
     }
@@ -81,6 +78,7 @@ def index(request):
 
 
 def posts(request):
+    all_posts = Post.objects.all()
     context = {
         'posts': all_posts
     }
@@ -88,8 +86,9 @@ def posts(request):
 
 
 def post_details(request, slug):
-    post = next(post for post in all_posts if post['slug'] == slug)
+    post = get_object_or_404(Post, slug=slug)
     context = {
-        'post': post
+        'post': post,
+        'post_tags': post.tags.all()
     }
     return render(request, 'blog/post-detail.html', context)
