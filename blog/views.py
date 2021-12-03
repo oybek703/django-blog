@@ -1,7 +1,8 @@
 from django.shortcuts import render, get_object_or_404
 from .forms import CommentForm
 from django.http import HttpResponseRedirect
-from .models import Comment, Post
+from .models import Post
+from django.urls import reverse
 
 
 def index(request):
@@ -39,5 +40,34 @@ def post_details(request, slug):
             return render(request, 'blog/post-detail.html', context)
     else:
         comment_form = CommentForm()
+        stored_posts = request.session.get('stored_posts')
+        is_saved_for_later = False
+        if post.id in stored_posts:
+            is_saved_for_later = True
         context['comment_form'] = comment_form
+        context['is_saved_for_later'] = is_saved_for_later
         return render(request, 'blog/post-detail.html', context)
+
+
+def read_later(request):
+    if request.method == 'GET':
+        stored_posts = request.session.get('stored_posts')
+        if stored_posts is None or len(stored_posts) == 0:
+            stored_posts = []
+        stored_posts = Post.objects.filter(id__in=stored_posts)
+        context = {
+            'posts': stored_posts,
+            'has_posts': len(stored_posts) != 0
+        }
+        return render(request, 'blog/stored-posts.html', context)
+    else:
+        stored_posts = request.session.get('stored_posts')
+        if stored_posts is None:
+            stored_posts = []
+        post_id = int(request.POST['post_id'])
+        if post_id not in stored_posts:
+            stored_posts.append(post_id)
+        else:
+            stored_posts.remove(post_id)
+        request.session['stored_posts'] = stored_posts
+        return HttpResponseRedirect(reverse('index'))
