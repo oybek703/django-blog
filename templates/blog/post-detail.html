@@ -22,4 +22,25 @@
     <main>
         {{ post.content|linebreaks }}
     </main>
+    <section>
+        <ul>
+                {% for comment in post_comments %}
+                    <li>{{ comment.user_name }} <br>"{{ comment.text }}"</li>
+                {% endfor %}
+        </ul>
+    </section>
+    <section id="comment-form">
+        <h2>Your Comment</h2>
+        <form method="post" action="{% url 'post-details' post.slug %}">
+            {% csrf_token %}
+            {% for field in comment_form %}
+                <div class="form-control">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+            <button>Save Comment</button>
+        </form>
+    </section>
 {% endblock %}
