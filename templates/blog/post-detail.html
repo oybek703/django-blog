@@ -23,7 +23,7 @@
   <h2>{{ post.title }}</h2>
   <div>
     {% for tag in post_tags %}
-      <span class="tag">{{ tag.caption }}</span>
+      <span class="tag">#{{ tag.caption }}</span>
     {% endfor %}
   </div>
   <div id="read-later">
@@ -52,7 +52,7 @@
 
 <section id="comments">
   <ul>
-    {% for comment in comments %}
+    {% for comment in post_comments %}
       <li>
         <h2>{{ comment.user_name }}</h2>
         <p>{{ comment.text|linebreaks }}</p>
