@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block css_files %}
+    <link rel="stylesheet" href="{% static 'blog/post.css' %}">
+    <link rel="stylesheet" href="{% static 'blog/index.css' %}">
+{% endblock %}
+{% block title %} MY BLOG {% endblock %}
+
+{% block body %}
+    <section id="welcome">
+        <header>
+            <img src="{% static 'blog/images/max.jpeg' %}" alt="Yoriqulov - The author of blog.">
+            <h2>Yoriqulov's Blog</h2>
+        </header>
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nam, quidem.</p>
+    </section>
+    <section id="latest-posts">
+        <h2>My Latest Thoughts</h2>
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consequatur
+            corporis error impedit maxime molestiae nobis obcaecati
+            quidem temporibus totam voluptatem.
+        </p>
+        <ul>
+            {% for post in posts %}
+                {% include 'blog/includes/post.html' %}
+            {% endfor %}
+        </ul>
+    </section>
+    <section id="about">
+        <h2>What I Do</h2>
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+            Alias atque dignissimos eius labore pariatur, perspiciatis repellat.</p>
+    </section>
+{% endblock %}
