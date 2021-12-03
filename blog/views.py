@@ -1,72 +1,8 @@
 from django.shortcuts import render, get_object_or_404
-from datetime import date
+from .forms import CommentForm
+from django.http import HttpResponseRedirect
 from .models import Post
-
-all_posts = [
-    {
-        "slug": "hike-in-the-mountains",
-        "image": "mountains.jpg",
-        "author": "Maximilian",
-        "date": date(2021, 7, 21),
-        "title": "Mountain Hiking",
-        "excerpt": "There's nothing like the views you get when hiking in the mountains! And I wasn't even prepared for what happened whilst I was enjoying the view!",
-        "content": """
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Officiis nobis
-          aperiam est praesentium, quos iste consequuntur omnis exercitationem quam
-          velit labore vero culpa ad mollitia? Quis architecto ipsam nemo. Odio.
-
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Officiis nobis
-          aperiam est praesentium, quos iste consequuntur omnis exercitationem quam
-          velit labore vero culpa ad mollitia? Quis architecto ipsam nemo. Odio.
-
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Officiis nobis
-          aperiam est praesentium, quos iste consequuntur omnis exercitationem quam
-          velit labore vero culpa ad mollitia? Quis architecto ipsam nemo. Odio.
-        """
-    },
-    {
-        "slug": "programming-is-fun",
-        "image": "coding.jpg",
-        "author": "Maximilian",
-        "date": date(2022, 3, 10),
-        "title": "Programming Is Great!",
-        "excerpt": "Did you ever spend hours searching that one error in your code? Yep - that's what happened to me yesterday...",
-        "content": """
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Officiis nobis
-          aperiam est praesentium, quos iste consequuntur omnis exercitationem quam
-          velit labore vero culpa ad mollitia? Quis architecto ipsam nemo. Odio.
-
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Officiis nobis
-          aperiam est praesentium, quos iste consequuntur omnis exercitationem quam
-          velit labore vero culpa ad mollitia? Quis architecto ipsam nemo. Odio.
-
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Officiis nobis
-          aperiam est praesentium, quos iste consequuntur omnis exercitationem quam
-          velit labore vero culpa ad mollitia? Quis architecto ipsam nemo. Odio.
-        """
-    },
-    {
-        "slug": "into-the-woods",
-        "image": "woods.jpg",
-        "author": "Maximilian",
-        "date": date(2020, 8, 5),
-        "title": "Nature At Its Best",
-        "excerpt": "Nature is amazing! The amount of inspiration I get when walking in nature is incredible!",
-        "content": """
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Officiis nobis
-          aperiam est praesentium, quos iste consequuntur omnis exercitationem quam
-          velit labore vero culpa ad mollitia? Quis architecto ipsam nemo. Odio.
-
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Officiis nobis
-          aperiam est praesentium, quos iste consequuntur omnis exercitationem quam
-          velit labore vero culpa ad mollitia? Quis architecto ipsam nemo. Odio.
-
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Officiis nobis
-          aperiam est praesentium, quos iste consequuntur omnis exercitationem quam
-          velit labore vero culpa ad mollitia? Quis architecto ipsam nemo. Odio.
-        """
-    }
-]
+from django.urls import reverse
 
 
 def index(request):
@@ -89,6 +25,49 @@ def post_details(request, slug):
     post = get_object_or_404(Post, slug=slug)
     context = {
         'post': post,
-        'post_tags': post.tags.all()
+        'post_tags': post.tags.all(),
+        'post_comments': post.comments.all().order_by('-id')
     }
-    return render(request, 'blog/post-detail.html', context)
+    if request.method == 'POST':
+        comment_form = CommentForm(request.POST)
+        if comment_form.is_valid():
+            new_comment = comment_form.save(commit=False)
+            new_comment.post = post
+            new_comment.save()
+            return HttpResponseRedirect(request.path)
+        else:
+            context['comment_form'] = comment_form
+            return render(request, 'blog/post-detail.html', context)
+    else:
+        comment_form = CommentForm()
+        stored_posts = request.session.get('stored_posts')
+        is_saved_for_later = False
+        if post.id in stored_posts:
+            is_saved_for_later = True
+        context['comment_form'] = comment_form
+        context['is_saved_for_later'] = is_saved_for_later
+        return render(request, 'blog/post-detail.html', context)
+
+
+def read_later(request):
+    if request.method == 'GET':
+        stored_posts = request.session.get('stored_posts')
+        if stored_posts is None or len(stored_posts) == 0:
+            stored_posts = []
+        stored_posts = Post.objects.filter(id__in=stored_posts)
+        context = {
+            'posts': stored_posts,
+            'has_posts': len(stored_posts) != 0
+        }
+        return render(request, 'blog/stored-posts.html', context)
+    else:
+        stored_posts = request.session.get('stored_posts')
+        if stored_posts is None:
+            stored_posts = []
+        post_id = int(request.POST['post_id'])
+        if post_id not in stored_posts:
+            stored_posts.append(post_id)
+        else:
+            stored_posts.remove(post_id)
+        request.session['stored_posts'] = stored_posts
+        return HttpResponseRedirect(reverse('index'))
