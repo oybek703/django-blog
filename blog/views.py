@@ -40,12 +40,9 @@ def post_details(request, slug):
             return render(request, 'blog/post-detail.html', context)
     else:
         comment_form = CommentForm()
-        stored_posts = request.session.get('stored_posts')
-        is_saved_for_later = False
-        if post.id in stored_posts:
-            is_saved_for_later = True
+        stored_posts = request.session.get('stored_posts') or []
         context['comment_form'] = comment_form
-        context['is_saved_for_later'] = is_saved_for_later
+        context['is_saved_for_later'] = post.id in stored_posts
         return render(request, 'blog/post-detail.html', context)
 
 
