@@ -6,6 +6,13 @@
     <link rel="stylesheet" href="{% static 'blog/post-detail.css' %}">
 {% endblock %}
 {% block body %}
+    {% if comment_form.errors %}
+      <div id="alert">
+        <h2>Saving the comment failed!</h2>
+        <p>Please check the comment form below the post and fix your erros.</p>
+        <a href="#comment-form">Fix!</a>
+      </div>
+    {% endif %}
     <section id="summary">
         <h2>{{ post.title }}</h2>
         <div class="tag">
@@ -22,11 +29,14 @@
     <main>
         {{ post.content|linebreaks }}
     </main>
-    <section>
+    <section id="comments">
         <ul>
-                {% for comment in post_comments %}
-                    <li>{{ comment.user_name }} <br>"{{ comment.text }}"</li>
-                {% endfor %}
+            {% for comment in post_comments %}
+                <li>
+                    <h2><a href="mailto:{{ comment.user_email }}">{{ comment.user_name }}</a></h2>
+                    "{{ comment.text|linebreaks }}"</li>
+                <hr>
+            {% endfor %}
         </ul>
     </section>
     <section id="comment-form">
@@ -34,7 +44,7 @@
         <form method="post" action="{% url 'post-details' post.slug %}">
             {% csrf_token %}
             {% for field in comment_form %}
-                <div class="form-control">
+                <div class="form-control {% if field.errors %} invalid {% endif %}">
                     {{ field.label_tag }}
                     {{ field }}
                     {{ field.errors }}

@@ -22,19 +22,16 @@ def posts(request):
 
 def post_details(request, slug):
     post = get_object_or_404(Post, slug=slug)
-    post_comments = Comment.objects.filter(post=post.id)
     context = {
         'post': post,
         'post_tags': post.tags.all(),
-        'post_comments': post_comments
+        'post_comments': post.comments.all().order_by('-id')
     }
     if request.method == 'POST':
         comment_form = CommentForm(request.POST)
         if comment_form.is_valid():
-            user_name = request.POST['user_name']
-            user_email = request.POST['user_email']
-            text = request.POST['text']
-            new_comment = Comment(user_name=user_name, user_email=user_email, text=text, post_id=post.id)
+            new_comment = comment_form.save(commit=False)
+            new_comment.post = post
             new_comment.save()
             return HttpResponseRedirect(request.path)
         else:
