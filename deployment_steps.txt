@@ -5,3 +5,11 @@ Deployment to AWS Elastic Beanstalk with Postgres database:
 4. Make migrations: python manage.py makemigrations
 5. Migrate: python manage.py migrate
 6. Create super user.
+
+Make ngnix serve static files instead of django:
+1. Add static-files.config with this content to .ebextensions folder(with exact same spaces):
+    option_settings:
+      aws:elasticbeanstalk:environment:proxy:staticfiles:
+        /static: staticfiles
+        /files: media
+2. Upload and deploy project.
