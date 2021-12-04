@@ -1,0 +1,7 @@
+Deployment to AWS Elastic Beanstalk with Postgres database:
+1. Create postgres database with "new security group" appropriately.
+2. Allow public connect and connect everywhere for postgres database in aws console.
+3. Add Postgres credentials to django settings.py file.
+4. Make migrations: python manage.py makemigrations
+5. Migrate: python manage.py migrate
+6. Create super user.
